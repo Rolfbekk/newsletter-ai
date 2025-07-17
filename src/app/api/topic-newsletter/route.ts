@@ -26,7 +26,9 @@ export async function GET(request: NextRequest) {
     console.log(`Generating topic-based newsletter for: "${topic}" (${timeFilter})`);
 
     // Search for topic-based content
+    console.log(`Starting Reddit API search for topic: "${topic}"`);
     const newsletter = await redditAPI.searchTopicContent(topic, timeFilter);
+    console.log(`Reddit API search completed. Found ${newsletter.topPosts.length} posts and ${newsletter.topComments.length} comments`);
 
     // Generate AI-powered engaging newsletter
     console.log(`Generating AI newsletter in ${format} format...`);
@@ -56,7 +58,48 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Topic Newsletter API error:', error);
     
+    // Log detailed error information for debugging
     if (error instanceof Error) {
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name
+      });
+      
+      // Check for specific Reddit API errors
+      if (error.message.includes('Rate limit exceeded')) {
+        return NextResponse.json(
+          { 
+            error: 'Reddit API rate limit exceeded. Please try again in a few minutes.',
+            success: false,
+            retryAfter: 60
+          },
+          { status: 429 }
+        );
+      }
+      
+      if (error.message.includes('timeout') || error.message.includes('ECONNABORTED')) {
+        return NextResponse.json(
+          { 
+            error: 'Request timeout. Reddit API is taking too long to respond.',
+            success: false,
+            retryAfter: 30
+          },
+          { status: 408 }
+        );
+      }
+      
+      if (error.message.includes('Network error') || error.message.includes('ENOTFOUND')) {
+        return NextResponse.json(
+          { 
+            error: 'Network connectivity issue. Unable to reach Reddit API.',
+            success: false,
+            retryAfter: 60
+          },
+          { status: 503 }
+        );
+      }
+      
       return NextResponse.json(
         { 
           error: error.message,
