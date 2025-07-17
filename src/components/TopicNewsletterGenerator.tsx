@@ -594,7 +594,7 @@ export default function TopicNewsletterGenerator() {
           <div className="glass border-subtle rounded-xl p-6 shadow-2xl">
             <h3 className="text-xl font-bold text-white mb-4">🔥 Top Posts</h3>
             <div className="space-y-4">
-              {newsletterData.topPosts.slice(0, 10).map((post) => (
+              {newsletterData.topPosts.slice(0, 20).map((post) => (
                 <div key={post.id} className="border border-white/10 glass rounded-lg p-4 hover:scale-[1.025] hover:shadow-xl hover:border-blue-400 transition-all duration-200 group relative">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
@@ -636,7 +636,7 @@ export default function TopicNewsletterGenerator() {
             <div className="glass border-subtle rounded-xl p-6 shadow-lg">
               <h3 className="text-xl font-bold text-white mb-4">💬 Top Comments</h3>
               <div className="space-y-4">
-                {newsletterData.topComments.slice(0, 8).map((comment) => (
+                {newsletterData.topComments.slice(0, 15).map((comment) => (
                   <div key={comment.id} className="border border-white/10 rounded-lg p-4">
                     <div className="flex items-start justify-between mb-2">
                       <span className="text-sm font-medium text-white">u/{comment.author}</span>

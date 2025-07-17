@@ -81,39 +81,7 @@ export default function EmailSignup({
     }
   };
 
-  const handleSendTestNewsletter = async () => {
-    setIsLoading(true);
-    setError(null);
 
-    try {
-      const response = await fetch("/api/send-test-newsletter", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          email: email.trim(),
-          topic,
-          newsletterFormat,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (data.success) {
-        setError(null);
-        // Show success message with message ID
-        alert(`Test newsletter sent successfully! Check your email.\nMessage ID: ${data.messageId}`);
-      } else {
-        setError(data.error || "Failed to send test newsletter");
-      }
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Network error";
-      setError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   const handleSendActualNewsletter = async () => {
     if (!newsletterContent) {
@@ -168,13 +136,6 @@ export default function EmailSignup({
             You're now subscribed to receive weekly newsletters about <span className="text-blue-400 font-semibold">{topic}</span>
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center">
-            <button
-              onClick={handleSendTestNewsletter}
-              disabled={isLoading}
-              className="px-6 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium transition-colors disabled:opacity-50"
-            >
-              {isLoading ? "Sending..." : "Send Test Newsletter"}
-            </button>
             {newsletterContent && (
               <button
                 onClick={handleSendActualNewsletter}

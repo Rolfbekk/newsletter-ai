@@ -25,9 +25,9 @@ export async function GET(request: NextRequest) {
     }
 
     // Limit the number of subreddits to prevent abuse
-    if (subredditList.length > 10) {
+    if (subredditList.length > 20) {
       return NextResponse.json(
-        { error: 'Maximum 10 subreddits allowed per request' },
+        { error: 'Maximum 20 subreddits allowed per request' },
         { status: 400 }
       );
     }
@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
       
     } else {
       // Get simple trending posts
-      const posts = await redditAPI.getTrendingPosts(subredditList, 20);
+      const posts = await redditAPI.getTrendingPosts(subredditList, 50);
       
       result.newsletter.topPosts = posts;
       result.newsletter.summary = {

@@ -188,7 +188,7 @@ export class RedditAPI {
     }
   }
 
-  async getSubredditPosts(subreddit: string, limit: number = 10): Promise<RedditPost[]> {
+  async getSubredditPosts(subreddit: string, limit: number = 25): Promise<RedditPost[]> {
     const cacheKey = `reddit_${subreddit}_${limit}`;
     
     // Check cache first
@@ -249,11 +249,11 @@ export class RedditAPI {
     }
   }
 
-  async getMultipleSubredditPosts(subreddits: string[], postsPerSubreddit: number = 5): Promise<RedditPost[]> {
+  async getMultipleSubredditPosts(subreddits: string[], postsPerSubreddit: number = 15): Promise<RedditPost[]> {
     const allPosts: RedditPost[] = [];
     
-    // Limit to 3 subreddits to avoid rate limits in production
-    const limitedSubreddits = subreddits.slice(0, 4);
+    // Limit to 8 subreddits to avoid rate limits in production
+    const limitedSubreddits = subreddits.slice(0, 8);
     
     // Fetch posts from each subreddit with a small delay to be respectful
     for (const subreddit of limitedSubreddits) {
@@ -274,7 +274,7 @@ export class RedditAPI {
   }
 
   // Get trending posts from multiple subreddits
-  async getTrendingPosts(subreddits: string[], totalPosts: number = 20): Promise<RedditPost[]> {
+  async getTrendingPosts(subreddits: string[], totalPosts: number = 50): Promise<RedditPost[]> {
     const postsPerSubreddit = Math.ceil(totalPosts / subreddits.length);
     const allPosts = await this.getMultipleSubredditPosts(subreddits, postsPerSubreddit);
     
@@ -283,7 +283,7 @@ export class RedditAPI {
   }
 
   // Get posts from different time periods (hot, new, top)
-  async getSubredditPostsByTime(subreddit: string, timeFilter: 'hour' | 'day' | 'week' | 'month' | 'year' | 'all' = 'week', limit: number = 10): Promise<RedditPost[]> {
+  async getSubredditPostsByTime(subreddit: string, timeFilter: 'hour' | 'day' | 'week' | 'month' | 'year' | 'all' = 'week', limit: number = 25): Promise<RedditPost[]> {
     const cacheKey = `reddit_${subreddit}_${timeFilter}_${limit}`;
     
     // Check cache first
@@ -337,7 +337,7 @@ export class RedditAPI {
     // Fetch posts from each subreddit
     for (const subreddit of subreddits) {
       try {
-        const posts = await this.getSubredditPostsByTime(subreddit, timeFilter, 15);
+        const posts = await this.getSubredditPostsByTime(subreddit, timeFilter, 30);
         allPosts.push(...posts);
         
         // Add delay between requests
@@ -353,7 +353,7 @@ export class RedditAPI {
 
     // Sort by score and get top posts
     const sortedPosts = allPosts.sort((a, b) => b.score - a.score);
-    analysis.topPosts = sortedPosts.slice(0, 20);
+    analysis.topPosts = sortedPosts.slice(0, 40);
 
     // Calculate engagement stats
     analysis.engagementStats = {
@@ -409,8 +409,8 @@ export class RedditAPI {
       try {
         console.log(`Searching r/${subreddit} for "${topic}"`);
         
-              // Get posts from the subreddit (reduced to avoid timeouts)
-        const posts = await this.getSubredditPostsByTime(subreddit, timeFilter, 10);
+              // Get posts from the subreddit (increased for more comprehensive results)
+        const posts = await this.getSubredditPostsByTime(subreddit, timeFilter, 25);
         
         // Filter posts relevant to the topic
         const relevantPosts = this.filterPostsByTopic(posts, topic);
@@ -496,11 +496,11 @@ export class RedditAPI {
 
     // Score and rank posts by relevance and engagement
     const scoredPosts = this.scorePostsByRelevance(allPosts, topic);
-    newsletter.topPosts = scoredPosts.slice(0, 15);
+    newsletter.topPosts = scoredPosts.slice(0, 30);
 
     // Get top comments
     const topComments = this.getTopComments(allComments);
-    newsletter.topComments = topComments.slice(0, 10);
+    newsletter.topComments = topComments.slice(0, 20);
 
     // Calculate summary stats
     newsletter.summary = {
@@ -579,8 +579,8 @@ export class RedditAPI {
     // Find matching topics
     for (const [key, subreddits] of Object.entries(topicMappings)) {
       if (topicLower.includes(key) || key.includes(topicLower)) {
-        // Limit to 2 subreddits to avoid rate limits
-        return subreddits.slice(0, 4);
+        // Limit to 6 subreddits to avoid rate limits
+        return subreddits.slice(0, 6);
       }
     }
 

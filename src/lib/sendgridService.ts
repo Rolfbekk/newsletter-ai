@@ -168,7 +168,7 @@ class SendGridService {
     const testBadge = isTest ? '<div style="background: #ff6b6b; color: white; padding: 8px 16px; border-radius: 20px; font-size: 12px; font-weight: bold; display: inline-block; margin-bottom: 20px;">TEST EDITION</div>' : '';
     
     // Get the base URL for the website
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://newsletter-ai-snowy.vercel.app';
     const viewNewsletterUrl = `${baseUrl}/newsletter/${encodeURIComponent(data.topic)}`;
     const managePreferencesUrl = `${baseUrl}/preferences`;
     const unsubscribeUrl = data.unsubscribeUrl || `${baseUrl}/unsubscribe`;

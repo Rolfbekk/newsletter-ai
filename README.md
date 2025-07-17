@@ -146,17 +146,7 @@ POST /api/email-signup
 }
 ```
 
-```
-POST /api/send-test-newsletter
-```
-**Body:**
-```json
-{
-  "email": "user@example.com",
-  "topic": "React Development",
-  "newsletterFormat": "detailed"
-}
-```
+
 
 ```
 POST /api/send-newsletter

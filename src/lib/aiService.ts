@@ -85,12 +85,12 @@ class AIService {
         const bScore = (b.relevanceScore || 0) * 0.7 + (b.score + b.num_comments) * 0.3;
         return bScore - aScore;
       })
-      .slice(0, 12);
+      .slice(0, 25);
 
     // Sort comments by score and relevance
     const sortedComments = comments
       .sort((a, b) => b.score - a.score)
-      .slice(0, 20);
+      .slice(0, 35);
 
     let content = "=== TOP REDDIT POSTS ===\n\n";
     
@@ -213,7 +213,7 @@ class AIService {
           }
         ],
         temperature: 0.7,
-        max_tokens: 3000
+        max_tokens: 4000
       };
       
       // Log the full request payload for debugging
