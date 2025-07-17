@@ -89,10 +89,103 @@ interface TopicNewsletter {
 
 export class RedditAPI {
   private userAgent: string;
+  private accessToken: string | null = null;
+  private tokenExpiry: number = 0;
 
   constructor() {
     // Use a proper User-Agent for production
     this.userAgent = 'NewsletterAI/1.0 (https://newsletter-ai-snowy.vercel.app)';
+  }
+
+  // Get Reddit API credentials from environment
+  private getCredentials() {
+    const clientId = process.env.REDDIT_CLIENT_ID;
+    const clientSecret = process.env.REDDIT_SECRET;
+    
+    if (!clientId || !clientSecret) {
+      console.warn('Reddit API credentials not found. Falling back to public API.');
+      return null;
+    }
+    
+    return { clientId, clientSecret };
+  }
+
+  // Authenticate with Reddit API
+  private async authenticate(): Promise<string | null> {
+    const credentials = this.getCredentials();
+    if (!credentials) return null;
+
+    // Check if we have a valid token
+    if (this.accessToken && Date.now() < this.tokenExpiry) {
+      return this.accessToken;
+    }
+
+    try {
+      console.log('Authenticating with Reddit API...');
+      
+      const response = await axios.post('https://www.reddit.com/api/v1/access_token', 
+        'grant_type=client_credentials',
+        {
+          headers: {
+            'Authorization': `Basic ${Buffer.from(`${credentials.clientId}:${credentials.clientSecret}`).toString('base64')}`,
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'User-Agent': this.userAgent
+          },
+          timeout: 5000
+        }
+      );
+
+      console.log('Authentication response:', response.data);
+
+      if (response.data && response.data.access_token) {
+        this.accessToken = response.data.access_token;
+        // Token expires in 1 hour, refresh after 50 minutes
+        this.tokenExpiry = Date.now() + (response.data.expires_in - 600) * 1000;
+        console.log('Successfully authenticated with Reddit API');
+        return this.accessToken;
+      } else {
+        console.error('No access token in response:', response.data);
+      }
+    } catch (error) {
+      console.error('Reddit API authentication failed:', error);
+      if (axios.isAxiosError(error)) {
+        console.error('Auth error details:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
+      }
+    }
+
+    return null;
+  }
+
+  // Make authenticated request to Reddit API
+  private async makeAuthenticatedRequest(url: string): Promise<any> {
+    const token = await this.authenticate();
+    
+    if (token) {
+      // Use authenticated API
+      const response = await axios.get(url, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'User-Agent': this.userAgent,
+          'Accept': 'application/json'
+        },
+        timeout: 8000
+      });
+      return response.data;
+    } else {
+      // Fallback to public API
+      const response = await axios.get(url.replace('https://oauth.reddit.com', 'https://www.reddit.com') + '.json', {
+        headers: {
+          'User-Agent': this.userAgent,
+          'Accept': 'application/json'
+        },
+        timeout: 8000
+      });
+      return response.data;
+    }
   }
 
   async getSubredditPosts(subreddit: string, limit: number = 10): Promise<RedditPost[]> {
@@ -108,26 +201,19 @@ export class RedditAPI {
     try {
       console.log(`Fetching posts from r/${subreddit}`);
       
-      const url = `https://www.reddit.com/r/${subreddit}/hot.json?limit=${limit}`;
-      console.log(`Making request to: ${url}`);
+      const url = `https://oauth.reddit.com/r/${subreddit}/hot?limit=${limit}`;
+      console.log(`Making authenticated request to: ${url}`);
       
-      const response = await axios.get<RedditResponse>(url, {
-        headers: {
-          'User-Agent': this.userAgent,
-          'Accept': 'application/json',
-        },
-        timeout: 8000, // Reduced timeout for serverless
-      });
+      const data = await this.makeAuthenticatedRequest(url);
 
-      console.log(`Response status: ${response.status}`);
-      console.log(`Response data keys:`, Object.keys(response.data || {}));
+      console.log(`Response data keys:`, Object.keys(data || {}));
 
-      if (!response.data || !response.data.data || !response.data.data.children) {
-        console.error('Invalid response structure:', response.data);
+      if (!data || !data.data || !data.data.children) {
+        console.error('Invalid response structure:', data);
         throw new Error(`Invalid response from Reddit API for r/${subreddit}`);
       }
 
-      const posts = response.data.data.children.map(child => child.data);
+      const posts = data.data.children.map((child: any) => child.data);
       
       // Cache the results
       cache.set(cacheKey, posts);
@@ -210,17 +296,10 @@ export class RedditAPI {
     try {
       console.log(`Fetching ${timeFilter} posts from r/${subreddit}`);
       
-      const response = await axios.get<RedditResponse>(
-        `https://www.reddit.com/r/${subreddit}/top.json?t=${timeFilter}&limit=${limit}`,
-        {
-          headers: {
-            'User-Agent': this.userAgent,
-          },
-          timeout: 10000,
-        }
-      );
+      const url = `https://oauth.reddit.com/r/${subreddit}/top?t=${timeFilter}&limit=${limit}`;
+      const data = await this.makeAuthenticatedRequest(url);
 
-      const posts = response.data.data.children.map(child => child.data);
+      const posts = data.data.children.map((child: any) => child.data);
       
       // Cache the results
       cache.set(cacheKey, posts);
@@ -572,17 +651,10 @@ export class RedditAPI {
     }
 
     try {
-      const response = await axios.get<RedditResponse>(
-        `https://www.reddit.com/comments/${postId}.json`,
-        {
-          headers: {
-            'User-Agent': this.userAgent,
-          },
-          timeout: 10000,
-        }
-      );
+      const url = `https://oauth.reddit.com/comments/${postId}.json`;
+      const data = await this.makeAuthenticatedRequest(url);
 
-      const comments = this.extractComments(response.data);
+      const comments = this.extractComments(data);
       
       // Cache the results
       cache.set(cacheKey, comments);
