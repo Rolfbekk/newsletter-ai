@@ -91,7 +91,8 @@ export class RedditAPI {
   private userAgent: string;
 
   constructor() {
-    this.userAgent = 'NewsletterAI/1.0 (by /u/your_username)';
+    // Use a proper User-Agent for production
+    this.userAgent = 'NewsletterAI/1.0 (https://newsletter-ai-snowy.vercel.app)';
   }
 
   async getSubredditPosts(subreddit: string, limit: number = 10): Promise<RedditPost[]> {
@@ -144,14 +145,17 @@ export class RedditAPI {
   async getMultipleSubredditPosts(subreddits: string[], postsPerSubreddit: number = 5): Promise<RedditPost[]> {
     const allPosts: RedditPost[] = [];
     
+    // Limit to 3 subreddits to avoid rate limits in production
+    const limitedSubreddits = subreddits.slice(0, 4);
+    
     // Fetch posts from each subreddit with a small delay to be respectful
-    for (const subreddit of subreddits) {
+    for (const subreddit of limitedSubreddits) {
       try {
         const posts = await this.getSubredditPosts(subreddit, postsPerSubreddit);
         allPosts.push(...posts);
         
         // Add a small delay between requests to be respectful to Reddit's servers
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        await new Promise(resolve => setTimeout(resolve, 500));
       } catch (error) {
         console.error(`Failed to fetch from r/${subreddit}:`, error);
         // Continue with other subreddits even if one fails
@@ -305,8 +309,8 @@ export class RedditAPI {
       try {
         console.log(`Searching r/${subreddit} for "${topic}"`);
         
-        // Get posts from the subreddit
-        const posts = await this.getSubredditPostsByTime(subreddit, timeFilter, 20);
+              // Get posts from the subreddit (reduced to avoid timeouts)
+      const posts = await this.getSubredditPostsByTime(subreddit, timeFilter, 20);
         
         // Filter posts relevant to the topic
         const relevantPosts = this.filterPostsByTopic(posts, topic);
@@ -421,17 +425,18 @@ export class RedditAPI {
     // Find matching topics
     for (const [key, subreddits] of Object.entries(topicMappings)) {
       if (topicLower.includes(key) || key.includes(topicLower)) {
-        return subreddits;
+        // Limit to 2 subreddits to avoid rate limits
+        return subreddits.slice(0, 4);
       }
     }
 
     // For unknown topics, use a very limited set of general subreddits
     if (topicLower.length > 2) {
-      return ['todayilearned', 'explainlikeimfive', 'technology'];
+      return ['technology', 'programming'];
     }
 
     // Default to core tech subreddits if no specific match
-    return ['technology', 'programming', 'artificial'];
+    return ['technology', 'programming'];
   }
 
   // Filter posts by topic relevance
