@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import TopicNewsletterGenerator from "@/components/TopicNewsletterGenerator";
 
 export default function Home() {

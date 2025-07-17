@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-
 export type NewsletterFormat = 'brief' | 'detailed' | 'visual';
 
 interface NewsletterFormatSelectorProps {

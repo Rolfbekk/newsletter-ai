@@ -34,7 +34,28 @@ export async function GET(request: NextRequest) {
 
     console.log(`Generating Reddit newsletter for: ${subredditList.join(', ')} (${timeFilter})`);
 
-    let result: any = {
+    const result: {
+      success: boolean;
+      newsletter: {
+        title: string;
+        subreddits: string[];
+        timeFilter: string;
+        generatedAt: string;
+        summary: {
+          totalPosts: number;
+          totalUpvotes: number;
+          totalComments: number;
+          averageScore: number;
+        };
+        topPosts: any[];
+        insights: string[];
+        trendingTopics?: any[];
+        topContributors?: any[];
+      };
+      meta: {
+        cacheStats: any;
+      };
+    } = {
       success: true,
       newsletter: {
         title: `Reddit Newsletter: ${subredditList.join(', ')}`,
@@ -105,7 +126,25 @@ export async function GET(request: NextRequest) {
   }
 }
 
-function generateInsights(analysis: any): string[] {
+function generateInsights(analysis: {
+  engagementStats: {
+    averageScore: number;
+    totalComments: number;
+    totalPosts: number;
+  };
+  trendingTopics: Array<{
+    keyword: string;
+    frequency: number;
+    totalScore: number;
+  }>;
+  topContributors: Array<{
+    username: string;
+    totalScore: number;
+    postsCount: number;
+  }>;
+  timeFilter: string;
+  totalPosts: number;
+}): string[] {
   const insights: string[] = [];
   
   // Engagement insights
