@@ -200,6 +200,19 @@ export default function TopicNewsletterGenerator() {
     setShowSuggestions(true);
   };
 
+  const handleInputKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      setShowSuggestions(false);
+      // Optionally generate newsletter if topic is entered
+      if (topic.trim()) {
+        generateNewsletter();
+      }
+    } else if (e.key === 'Escape') {
+      setShowSuggestions(false);
+    }
+  };
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString();
   };
@@ -248,6 +261,7 @@ export default function TopicNewsletterGenerator() {
                 onChange={handleInputChange}
                 onFocus={handleInputFocus}
                 onBlur={handleInputBlur}
+                onKeyDown={handleInputKeyDown}
                 placeholder="e.g., Agentic AI, React Development, Startup Funding..."
                 className="flex-1 px-4 py-3 bg-black/60 border border-white/20 rounded-l-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-lg text-white placeholder-gray-400 transition-all focus-ring hover:border-white/30"
               />

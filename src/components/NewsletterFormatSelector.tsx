@@ -13,7 +13,7 @@ const FORMAT_OPTIONS = [
     title: 'Brief',
     description: 'Quick overview with key points',
     icon: '⚡',
-    features: ['5-7 key takeaways', 'Executive summary', 'Fast reading']
+    features: ['4-6 key takeaways', 'Executive summary', 'Fast reading']
   },
   {
     id: 'detailed' as NewsletterFormat,
