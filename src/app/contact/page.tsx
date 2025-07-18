@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function ContactUs() {
@@ -13,13 +13,73 @@ export default function ContactUs() {
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [error, setError] = useState('');
+  const [showSubjectDropdown, setShowSubjectDropdown] = useState(false);
+  const subjectDropdownRef = useRef<HTMLDivElement>(null);
+  const dropdownButtonRef = useRef<HTMLButtonElement>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const SUBJECT_OPTIONS = [
+    {
+      category: "General",
+      options: [
+        { value: "General Inquiry", label: "General Inquiry", description: "General questions about NewsletterAI" },
+        { value: "Feedback", label: "Feedback", description: "Share your thoughts and suggestions" }
+      ]
+    },
+    {
+      category: "Support",
+      options: [
+        { value: "Technical Support", label: "Technical Support", description: "Help with technical issues" },
+        { value: "Bug Report", label: "Bug Report", description: "Report a bug or problem" }
+      ]
+    },
+    {
+      category: "Features",
+      options: [
+        { value: "Feature Request", label: "Feature Request", description: "Suggest new features" },
+        { value: "Partnership", label: "Partnership", description: "Business partnership opportunities" }
+      ]
+    },
+    {
+      category: "Other",
+      options: [
+        { value: "Other", label: "Other", description: "Any other inquiries" }
+      ]
+    }
+  ];
+
+  // Handle clicks outside the dropdown to close it
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        subjectDropdownRef.current && 
+        !subjectDropdownRef.current.contains(event.target as Node) &&
+        dropdownButtonRef.current && 
+        !dropdownButtonRef.current.contains(event.target as Node)
+      ) {
+        setShowSubjectDropdown(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
       [name]: value
     }));
+  };
+
+  const handleSubjectSelect = (subject: string) => {
+    setFormData(prev => ({
+      ...prev,
+      subject
+    }));
+    setShowSubjectDropdown(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -187,23 +247,60 @@ export default function ContactUs() {
                       <label htmlFor="subject" className="block text-sm font-medium text-gray-300 mb-2">
                         Subject *
                       </label>
-                      <select
-                        id="subject"
-                        name="subject"
-                        value={formData.subject}
-                        onChange={handleInputChange}
-                        required
-                        className="w-full px-4 py-3 bg-black/60 border border-white/20 rounded-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-white"
-                      >
-                        <option value="">Select a subject</option>
-                        <option value="General Inquiry">General Inquiry</option>
-                        <option value="Technical Support">Technical Support</option>
-                        <option value="Feature Request">Feature Request</option>
-                        <option value="Bug Report">Bug Report</option>
-                        <option value="Feedback">Feedback</option>
-                        <option value="Partnership">Partnership</option>
-                        <option value="Other">Other</option>
-                      </select>
+                      <div className="relative">
+                        <div className="flex">
+                          <input
+                            type="text"
+                            id="subject"
+                            name="subject"
+                            value={formData.subject}
+                            onChange={handleInputChange}
+                            required
+                            readOnly
+                            placeholder="Select a subject"
+                            className="flex-1 px-4 py-3 bg-black/60 border border-white/20 rounded-l-lg focus:ring-2 focus:ring-blue-400 focus:border-blue-400 text-white placeholder-gray-400 transition-all focus-ring hover:border-white/30 cursor-pointer"
+                            onClick={() => setShowSubjectDropdown(!showSubjectDropdown)}
+                          />
+                          <button
+                            ref={dropdownButtonRef}
+                            type="button"
+                            onClick={() => setShowSubjectDropdown(!showSubjectDropdown)}
+                            className="px-3 py-3 bg-black/60 border border-l-0 border-white/20 hover:bg-black/80 hover:border-white/30 transition-all focus:outline-none focus:ring-2 focus:ring-blue-400 rounded-r-lg"
+                          >
+                            <svg 
+                              className={`w-5 h-5 text-white transition-transform duration-200 ${showSubjectDropdown ? 'rotate-180' : ''}`} 
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                            </svg>
+                          </button>
+                        </div>
+                        
+                        {/* Subject Dropdown */}
+                        {showSubjectDropdown && (
+                          <div ref={subjectDropdownRef} className="absolute top-full left-0 right-0 glass border-subtle shadow-2xl z-10 mt-1 max-h-80 overflow-y-auto animate-fade-in">
+                            <div className="p-2">
+                              {SUBJECT_OPTIONS.map((category) => (
+                                <div key={category.category} className="mb-3">
+                                  <div className="text-xs text-gray-400 font-medium px-2 mb-1">{category.category}</div>
+                                  {category.options.map((option) => (
+                                    <button
+                                      key={option.value}
+                                      onClick={() => handleSubjectSelect(option.value)}
+                                      className="w-full text-left px-2 py-2 hover:bg-white/10 rounded text-sm text-white hover:text-white transition-colors"
+                                    >
+                                      <div className="font-medium">{option.label}</div>
+                                      <div className="text-xs text-gray-400">{option.description}</div>
+                                    </button>
+                                  ))}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
 
                     <div>
